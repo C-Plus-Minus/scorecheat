@@ -1,19 +1,19 @@
 {
-    "name": "Score Editor PWA",
-    "short_name": "ScoreEditor",
-    "start_url": "index.html",
+    "name": "PWA Minimal Test",
+    "version": "1.0",
+    "description": "Minimal PWA shell for testing service worker functionality.",
+    "start_url": "/",
     "display": "standalone",
     "background_color": "#ffffff",
-    "theme_color": "#4a90e2",
-    "description": "A PWA for viewing and editing raw XML data inside a ZIP archive.",
+    "manifest_version": 1,
     "icons": [
         {
-            "src": "icon-192x192.png",
+            "src": "icon.png",
             "sizes": "192x192",
             "type": "image/png"
         },
         {
-            "src": "icon-512x512.png",
+            "src": "icon-512.png",
             "sizes": "512x512",
             "type": "image/png"
         }

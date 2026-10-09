@@ -1,0 +1,6 @@
+pairs:
+  cpm: C+-
+  g4l: Gemma4
+email_addresses:
+  cpm: c-plus-minus@noreply.github.com
+  g4l: gemma4-32.latest@ocp.corp

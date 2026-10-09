@@ -3,37 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Score Editor PWA</title>
-    <link rel="stylesheet" href="style.css">
+    <title>PWA Minimal Test</title>
     <link rel="manifest" href="manifest.json">
+    <style>
+        /* Minimal styling to ensure visibility */
+        body { font-family: sans-serif; padding: 20px; }
+        #message-area { margin-top: 20px; padding: 10px; border: 1px solid #ccc; }
+    </style>
 </head>
-<body>
+<body class="pwa-minimal">
     <header>
-        <h1>Score XML Editor</h1>
+        <h1 id="app-title">PWA Minimal Test</h1>
     </header>
     <main>
-        <section id="upload-section">
-            <h2>1. Upload ZIP Archive</h2>
-            <input type="file" id="zipFileInput" accept=".zip" disabled>
-            <button id="uploadButton" disabled>Select ZIP File</button>
-            <p id="message-area" class="error"></p>
-        </section>
-
-        <section id="display-section" style="display: none;">
-            <h2>2. Display & Edit Score XML</h2>
-            <p>File loaded successfully: score.xml</p>
-            <div class="editor-container">
-                <pre id="rawXmlDisplay" contenteditable="true"></pre>
-            </div>
-            <button id="processButton" disabled>Generate & Download Modified ZIP</button>
-        </section>
+        <button id="simpleButton">Click to Test PWA Script</button>
+        <p id="message-area">Script status: Waiting for button click...</p>
     </main>
 
-    <footer>
-        <p>&copy; PWA Scorer Tool</p>
-    </footer>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
