@@ -1,0 +1,108 @@
+/* Global Reset and Typography */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f4f9;
+    color: #333;
+    line-height: 1.6;
+}
+
+header {
+    background-color: #4a90e2;
+    color: white;
+    padding: 20px 0;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+header h1 {
+    margin: 0;
+}
+
+main {
+    padding: 20px;
+    max-width: 900px;
+    margin: 20px auto;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+h2 {
+    color: #4a90e2;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 10px;
+    margin-top: 30px;
+}
+
+/* Form and Input Styling */
+#upload-section, #display-section {
+    margin-bottom: 30px;
+}
+
+/* Buttons */
+button {
+    background-color: #4a90e2;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    margin-right: 10px;
+    cursor: pointer;
+    border-radius: 5px;
+    font-size: 1rem;
+    transition: background-color 0.2s;
+}
+
+button:hover:not([disabled]) {
+    background-color: #367ac5;
+}
+
+button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+/* File Input */
+#zipFileInput {
+    margin-right: 10px;
+    padding: 5px;
+    display: none; /* Hidden, relying on button click */
+}
+
+/* Message Area */
+.error {
+    color: #d9534f;
+    padding: 10px;
+    background-color: #fdd;
+    border: 1px solid #d9534f;
+    border-radius: 5px;
+    margin-top: 15px;
+}
+
+/* Editor Styling */
+.editor-container {
+    margin-top: 15px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 15px;
+    background-color: #f9f9f9;
+}
+
+#rawXmlDisplay {
+    display: block;
+    white-space: pre-wrap; /* Preserve whitespace and wrap correctly */
+    word-break: break-all;
+    min-height: 300px;
+    /* Ensure editable area feels like a text editor */
+    outline: none;
+}
+
+footer {
+    text-align: center;
+    padding: 10px;
+    margin-top: 30px;
+    border-top: 1px solid #eee;
+    color: #777;
+}
+</style>

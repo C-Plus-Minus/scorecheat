@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Score Editor PWA</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+</head>
+<body>
+    <header>
+        <h1>Score XML Editor</h1>
+    </header>
+    <main>
+        <section id="upload-section">
+            <h2>1. Upload ZIP Archive</h2>
+            <input type="file" id="zipFileInput" accept=".zip" disabled>
+            <button id="uploadButton" disabled>Select ZIP File</button>
+            <p id="message-area" class="error"></p>
+        </section>
+
+        <section id="display-section" style="display: none;">
+            <h2>2. Display & Edit Score XML</h2>
+            <p>File loaded successfully: score.xml</p>
+            <div class="editor-container">
+                <pre id="rawXmlDisplay" contenteditable="true"></pre>
+            </div>
+            <button id="processButton" disabled>Generate & Download Modified ZIP</button>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; PWA Scorer Tool</p>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
