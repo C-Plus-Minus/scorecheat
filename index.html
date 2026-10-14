@@ -1,25 +1,30 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PWA Minimal Test</title>
     <link rel="manifest" href="manifest.json">
     <style>
-        /* Minimal styling to ensure visibility */
         body { font-family: sans-serif; padding: 20px; }
         #message-area { margin-top: 20px; padding: 10px; border: 1px solid #ccc; }
     </style>
 </head>
+
 <body class="pwa-minimal">
     <header>
         <h1 id="app-title">PWA Minimal Test</h1>
     </header>
+
     <main>
         <button id="simpleButton">Click to Test PWA Script</button>
+        <input type="file" id="fileInput" accept=".zip, .capx" style="display: none;">
         <p id="message-area">Script status: Waiting for button click...</p>
     </main>
 
+    <script src="https://unpkg.com/jszip@3.7.1/dist/jszip.js" type="text/javascript"></script>
     <script src="script.js"></script>
-</body>
+</body class="pwa-minimal">
+
 </html>
