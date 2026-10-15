@@ -31,16 +31,46 @@ document.addEventListener('DOMContentLoaded', (event) => {
             try {
                 const zip = await JSZip.loadAsync(bytes);
                 
-                const fileNames = [];
-                console.log('--- Beginning Directory Scan ---'); 
-                const score = Object.values(zip.files).filter(f => f.name === 'score.xml');
-                console.log('score:', score);
+                // Find and extract the content of all score.xml files
+                const scoreFiles = Object.values(zip.files).filter(f => f.name === 'score.xml');
 
-                console.log('================================'); 
-                console.log(`Scan Complete. Total files found: ${fileNames.length}`);
-                console.log('================================');
+                if (scoreFiles.length === 0) {
+                    console.log('--- Beginning Directory Scan ---');
+                    console.log('No score.xml files found.');
+                    messageArea.textContent = '✅ Success! No score.xml files were found to extract.';
+                    return;
+                }
 
-                messageArea.textContent = `✅ Success! Found ${fileNames.length} file(s) matching 'score.xml'. Names logged to console.`;
+                console.log('--- Beginning Score XML Extraction ---');
+
+                // Extract content of all found score.xml files concurrently
+                const extractionPromises = scoreFiles.map(async (file) => {
+                    try {
+                        const content = await file.async("string");
+                        return { name: file.name, content: content };
+                    } catch (e) {
+                        console.error(`Error extracting ${file.name}:`, e);
+                        return { name: file.name, content: `[ERROR during extraction: ${e.message}]` };
+                    }
+                });
+
+                Promise.all(extractionPromises).then(extractedScores => {
+                    console.log('================================');
+                    console.log(`Extraction Complete. Processed ${extractedScores.length} file(s).`);
+                    console.log('--- Extracted XML Content ---');
+
+                    let combinedContent = extractedScores.map(s => 
+                        `--- START FILE: ${s.name} ---\n${s.content}\n--- END FILE: ${s.name} ---\n`
+                    ).join('\n');
+
+                    console.log(combinedContent);
+
+                    // Final update to message area
+                    messageArea.textContent = `✅ Success! Extracted and processed ${extractedScores.length} file(s). Content logged to console.`;
+                }).catch(e => {
+                    console.error('Fatal error during batch extraction:', e);
+                    messageArea.textContent = `❌ Fatal Error during extraction: ${e.message}. Check console for details.`;
+                });
             } catch(e) {
                 console.error('Error processing ZIP file:', e);
                 messageArea.textContent = `❌ Error: Could not process the archive. (${e.message})`;
