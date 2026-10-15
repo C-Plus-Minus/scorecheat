@@ -3,25 +3,22 @@ document.addEventListener('DOMContentLoaded', (event) => {
     const fileInput = document.getElementById('fileInput');
     const messageArea = document.getElementById('message-area');
 
-    const openFilePicker = () => fileInput.click();
+    button.addEventListener('click', pickFile);
 
-    button.addEventListener('click', openFilePicker);
+    fileInput.addEventListener(events.CANCELLED, async (event) => {
+        messageArea.textContent = 'File selection cancelled.';
+        return;
+    });
 
-    fileInput.addEventListener('change', async (event) => {
-        const file = event.target.files[0];
-        if (!file) {
-            messageArea.textContent = 'File selection cancelled.';
-            return;
-        }
+    fileInput.addEventListener(events.INVALID_FILE, async (event) => {
+        messageArea.textContent = '⛔️ Please select a valid .capx file. ⛔️';
+        return;
+    });
+    
+    fileInput.addEventListener(events.READ, async (event) => {
+        const file = event.detail.file;
+        messageArea.textContent = `Reading ${file.name}...`;
 
-        const fileName = file.name.toLowerCase();
-        if (!fileName.endsWith('.zip') && !fileName.endsWith('.capx')) {
-            messageArea.textContent = '⛔️ Please select a valid .capx file. ⛔️';
-            return;
-        }
-
-        messageArea.textContent = `Reading ${fileName}...`;
-        
         const reader = new FileReader();
         reader.readAsArrayBuffer(file);
 
@@ -50,4 +47,33 @@ document.addEventListener('DOMContentLoaded', (event) => {
             messageArea.textContent = '❌ Error reading the selected file. ❌';
         };
     });
+        
 });
+
+const events = {
+    CANCELLED: 'cancelled',
+    INVALID_FILE: 'invalid',
+    READ: 'read'
+};
+
+const pickFile = () => {
+    const fileInput = document.getElementById('fileInput');
+
+    fileInput.click();
+
+    fileInput.addEventListener('change', async (event) => {
+        const file = event.target.files[0];
+        if (!file) {
+            fileInput.dispatchEvent(new CustomEvent(events.CANCELLED));
+            return;
+        }
+
+        const fileName = file.name.toLowerCase();
+        if (!fileName.endsWith('.zip') && !fileName.endsWith('.capx')) {
+            fileInput.dispatchEvent(new CustomEvent(events.INVALID_FILE));
+            return;
+        }
+
+        fileInput.dispatchEvent(new CustomEvent(events.READ, {detail: {file}}));
+    });
+};
