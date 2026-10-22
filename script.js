@@ -1,28 +1,32 @@
+import "./sliders/sliders.js";
+
 document.addEventListener('DOMContentLoaded', (event) => {
     const button = document.getElementById('simpleButton');
-    const fileInput = document.getElementById('fileInput');
-    const messageArea = document.getElementById('message-area');
-
     button.addEventListener('click', pickFile);
 
-    fileInput.addEventListener(events.CANCELLED, async (event) => {
-        messageArea.textContent = 'File selection cancelled.';
-        return;
-    });
-
-    fileInput.addEventListener(events.INVALID_FILE, async (event) => {
-        messageArea.textContent = '⛔️ Please select a valid .capx file. ⛔️';
-        return;
-    });
-    
+    const fileInput = document.getElementById('fileInput');
+    const messageArea = document.getElementById('message-area');
     fileInput.addEventListener(events.READ, async (event) => {
-        const file = event.detail.file;
-        decompress(file)
+        decompress(event.detail.file)
             .then(content => {
                 messageArea.textContent = `✅ Successfully read! ✅\n\n${content}`;
                 processXml(content);
             })
             .catch(err => messageArea.textContent = `${err}`);
+    });
+    fileInput.addEventListener(events.CANCELLED, async (event) => {
+        messageArea.textContent = 'File selection cancelled.';
+        return;
+    });
+    fileInput.addEventListener(events.INVALID_FILE, async (event) => {
+        messageArea.textContent = '⛔️ Please select a valid .capx file. ⛔️';
+        return;
+    });
+
+    const sliders = document.querySelector("choir-sliders");
+    sliders.addEventListener("volume-change", (event) => {
+        const { voice, instrument, volume } = event.detail;
+        console.log(voice.toUpperCase(), instrument.toUpperCase(), volume);
     });
         
 });
@@ -86,17 +90,14 @@ const decompress = (file) => {
     });
 }
 
-
-
 const processXml = (xml) => {
      const score = new DOMParser().parseFromString(xml, "application/xml")
      const staffLayout = score.querySelectorAll('staffLayout');
 
-     const configuration = {};
+     const voices = {};
      for(const s of staffLayout) {
         const instrument = s.querySelector('instrument');
-        const name = instrument.getAttribute('name');
-        const abbrev = instrument.getAttribute('abbrev');
+        const name = instrument.getAttribute('name') || instrument.getAttribute('abbrev')
 
         const sound = s.querySelector('sound');
         const instr = sound.getAttribute('instr');
@@ -106,10 +107,15 @@ const processXml = (xml) => {
         sound.removeAttribute('genericSound');
         sound.removeAttribute('DataID');
 
+        voices[name] = {instrument: instr, volume: vol};
+
         // TODO:
         // create and connect slider
         // create and connect instrument
         // make update
         // write back stuff
      }
+
+     const sliders = document.querySelector("choir-sliders");
+     sliders.voices = voices;
 }
