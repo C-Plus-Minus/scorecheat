@@ -18,7 +18,10 @@ document.addEventListener('DOMContentLoaded', (event) => {
     fileInput.addEventListener(events.READ, async (event) => {
         const file = event.detail.file;
         decompress(file)
-            .then(xml => messageArea.textContent = `✅ Successfully read! ✅\n\n${xml}`)
+            .then(content => {
+                messageArea.textContent = `✅ Successfully read! ✅\n\n${content}`;
+                processXml(content);
+            })
             .catch(err => messageArea.textContent = `${err}`);
     });
         
@@ -81,4 +84,32 @@ const decompress = (file) => {
             return reject('❌ Error reading the selected file. ❌');
         };
     });
+}
+
+
+
+const processXml = (xml) => {
+     const score = new DOMParser().parseFromString(xml, "application/xml")
+     const staffLayout = score.querySelectorAll('staffLayout');
+
+     const configuration = {};
+     for(const s of staffLayout) {
+        const instrument = s.querySelector('instrument');
+        const name = instrument.getAttribute('name');
+        const abbrev = instrument.getAttribute('abbrev');
+
+        const sound = s.querySelector('sound');
+        const instr = sound.getAttribute('instr');
+        const vol = sound.getAttribute('volume');
+
+        sound.removeAttribute('sample');
+        sound.removeAttribute('genericSound');
+        sound.removeAttribute('DataID');
+
+        // TODO:
+        // create and connect slider
+        // create and connect instrument
+        // make update
+        // write back stuff
+     }
 }
