@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
     fileInput.addEventListener(events.READ, async (event) => {
         decompress(event.detail.file)
             .then(content => {
-                messageArea.textContent = `✅ Successfully read! ✅\n\n${content}`;
+                messageArea.textContent = `✅ Successfully read! ✅`;
                 processXml(content);
             })
             .catch(err => messageArea.textContent = `${err}`);
@@ -108,12 +108,6 @@ const processXml = (xml) => {
         sound.removeAttribute('DataID');
 
         voices[name] = {instrument: instr, volume: vol};
-
-        // TODO:
-        // create and connect slider
-        // create and connect instrument
-        // make update
-        // write back stuff
      }
 
      const sliders = document.querySelector("choir-sliders");

@@ -1,3 +1,5 @@
+import { MIDI } from './instrument-list.js';
+
 class ChoirSliders extends HTMLElement {
   _voices = {};
 
@@ -30,22 +32,29 @@ class ChoirSliders extends HTMLElement {
         </header>
 
         <div class="voice-list">
-          ${Object.entries(this._voices).map(([voice, preferences]) => `
+          ${Object.entries(this._voices).map(([voice, assigned]) => `
             <div class="voice" data-voice="${voice}">
               <div class="voice-top">
                 <span class="voice-name">
                   <span class="dot"></span>
                   ${voice}
-                  <span class="instrument">#${preferences.instrument}</span>
+                  <select>
+                    ${Object.entries(MIDI.Instruments).map(([instrument, properties]) => {
+                      return instrument === assigned.instrument 
+                        ? `<option value="${instrument}" selected>${properties.name}</option>`
+                        : `<option value="${instrument}">${properties.name}</option>`
+                    })}
+                  </select>
+                  <span class="instrument">#${assigned.instrument}</span>
                 </span>
-                <span class="volume">${preferences.volume}%</span>
+                <span class="volume">${assigned.volume}%</span>
               </div>
 
               <input
                 type="range"
                 min="0"
                 max="127"
-                value="${preferences.volume}"
+                value="${assigned.volume}"
                 aria-label="${voice} volume"
               >
             </div>
@@ -57,11 +66,12 @@ class ChoirSliders extends HTMLElement {
     this.querySelectorAll(".voice").forEach(row => {
       const voice = row.dataset.voice;
       const slider = row.querySelector("input");
+      const dropdown = row.querySelector("select");
       const display = row.querySelector(".volume");
 
       const update = () => {
         const absoluteVolume = Number(slider.value);
-        const relativeVolume = Math.ceil(absoluteVolume/127*100);
+        const relativeVolume = Math.ceil(absoluteVolume / 127 * 100);
 
         display.textContent = `${relativeVolume}%`;
         slider.style.setProperty("--fill", `${relativeVolume}%`);
@@ -71,7 +81,7 @@ class ChoirSliders extends HTMLElement {
         this.dispatchEvent(new CustomEvent("volume-change", {
           detail: {
             voice: voice,
-            instrument: this._voices[voice].instrument,
+            instrument: dropdown.value,
             volume: this._voices[voice].volume
           },
           bubbles: true
@@ -80,6 +90,7 @@ class ChoirSliders extends HTMLElement {
 
       // TODO: redesign -> mixed responsibilities
       slider.addEventListener("input", update);
+      dropdown.addEventListener("change", update);
       update();
     });
   }
