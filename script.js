@@ -1,147 +1,294 @@
 import "./sliders/sliders.js";
 
-document.addEventListener('DOMContentLoaded', (event) => {
-    const button = document.getElementById('simpleButton');
-    button.addEventListener('click', pickFile);
-
-    const fileInput = document.getElementById('fileInput');
-    const messageArea = document.getElementById('message-area');
-
-    let scoreXml;
-
-    fileInput.addEventListener(events.READ, async (event) => {
-        decompress(event.detail.file)
-            .then(content => {
-                scoreXml = content;
-                messageArea.textContent = `✅ Successfully read! ✅`;                
-                processXml(content);
-            })
-            .catch(err => messageArea.textContent = `${err}`);
-    });
-    fileInput.addEventListener(events.CANCELLED, async (event) => {
-        messageArea.textContent = 'File selection cancelled.';
-        return;
-    });
-    fileInput.addEventListener(events.INVALID_FILE, async (event) => {
-        messageArea.textContent = '⛔️ Please select a valid .capx file. ⛔️';
-        return;
-    });
-
+document.addEventListener("DOMContentLoaded", () => {
+    const button = document.getElementById("simpleButton");
+    const fileInput = document.getElementById("fileInput");
+    const messageArea = document.getElementById("message-area");
+    const downloadButton = document.getElementById("downloadButton");
     const sliders = document.querySelector("choir-sliders");
-    sliders.addEventListener("volume-change", (event) => {
-        const { voice, instrument, volume } = event.detail;
-        const modifiedXml = modifyXML(scoreXml, voice, instrument, volume)
 
-        // TODO: 
-        //  1. Read MD5 hash of original file
-        //  2. Create copy of original file: `<original file name>_<ISO8601 timestamp>.capx`
-        //  3. Compare original MD5 to copy MD5
-        //  4. If error, retry steps 1. through 3.
-        //  5. Otherwise, overwrite original score.xml (NOT the copy!) with our modified score.xml
+    let originalZip = null;
+    let scoreXml = null;
+    let scorePath = null;
+    let originalFileName = "modified-score.capx";
+
+    const events = {
+        CANCELLED: "cancelled",
+        INVALID_FILE: "invalid",
+        READ: "read"
+    };
+
+    // Open the file picker.
+    button.addEventListener("click", pickFile);
+
+    // Handle file selection events.
+    fileInput.addEventListener(events.READ, async (event) => {
+        try {
+            const result = await decompress(event.detail.file);
+
+            originalZip = result.zip;
+            scoreXml = result.scoreXml;
+            scorePath = result.scorePath;
+
+            originalFileName = event.detail.file.name.replace(
+                /\.(capx|zip)$/i,
+                ""
+            ) + "-modified.capx";
+
+            processXml(scoreXml);
+
+            messageArea.textContent = "✅ Successfully read!";
+        } catch (err) {
+            messageArea.textContent = err.message;
+            console.error(err);
+        }
     });
-        
-});
 
-const events = {
-    CANCELLED: 'cancelled',
-    INVALID_FILE: 'invalid',
-    READ: 'read'
-};
+    fileInput.addEventListener(events.CANCELLED, () => {
+        messageArea.textContent = "File selection cancelled.";
+    });
 
-const pickFile = () => {
-    const fileInput = document.getElementById('fileInput');
-    
-    fileInput.click(); // <-- triggers picker
-    fileInput.addEventListener('change', async (event) => {
-        const file = event.target.files[0];
+    fileInput.addEventListener(events.INVALID_FILE, () => {
+        messageArea.textContent =
+            "⛔️ Please select a valid .capx or .zip file.";
+    });
+
+    // Apply GUI changes to the current XML.
+    sliders.addEventListener("volume-change", (event) => {
+        if (!scoreXml) {
+            messageArea.textContent = "Please load a score first.";
+            return;
+        }
+
+        const { voice, instrument, volume } = event.detail;
+
+        try {
+            scoreXml = modifyXML(
+                scoreXml,
+                voice,
+                instrument,
+                volume
+            );
+
+            messageArea.textContent = `✅ Updated ${voice}`;
+        } catch (err) {
+            console.error("XML modification failed:", err);
+            messageArea.textContent = `❌ ${err.message}`;
+        }
+    });
+
+    // Download the modified archive.
+    downloadButton.addEventListener("click", async () => {
+        if (!originalZip || !scoreXml || !scorePath) {
+            messageArea.textContent =
+                "❌ Please load a .capx file first.";
+            return;
+        }
+
+        downloadButton.disabled = true;
+
+        try {
+            await downloadCapx();
+
+            messageArea.textContent =
+                "✅ Modified .capx downloaded!";
+        } catch (err) {
+            console.error("Download failed:", err);
+            messageArea.textContent =
+                `❌ Download failed: ${err.message}`;
+        } finally {
+            downloadButton.disabled = false;
+        }
+    });
+
+    // Trigger the file picker.
+    function pickFile() {
+        // Prevent accumulating change listeners on repeated clicks.
+        fileInput.click();
+    }
+
+    // Handle the native file input directly.
+    fileInput.addEventListener("change", (event) => {
+        const file = event.target.files?.[0];
+
         if (!file) {
-            fileInput.dispatchEvent(new CustomEvent(events.CANCELLED));
+            fileInput.dispatchEvent(
+                new CustomEvent(events.CANCELLED)
+            );
             return;
         }
 
         const fileName = file.name.toLowerCase();
-        if (!fileName.endsWith('.zip') && !fileName.endsWith('.capx')) {
-            fileInput.dispatchEvent(new CustomEvent(events.INVALID_FILE));
-            console.error(`Expected .(zip|capx) but got: ${file.name}`);
+
+        if (
+            !fileName.endsWith(".capx") &&
+            !fileName.endsWith(".zip")
+        ) {
+            fileInput.dispatchEvent(
+                new CustomEvent(events.INVALID_FILE)
+            );
             return;
         }
 
-        fileInput.dispatchEvent(new CustomEvent(events.READ, {detail: {file}}));
+        fileInput.dispatchEvent(
+            new CustomEvent(events.READ, {
+                detail: { file }
+            })
+        );
+
+        // Allow selecting the same file again later.
+        fileInput.value = "";
     });
-};
 
-const decompress = (file) => {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsArrayBuffer(file);
+    // Read the archive and extract score.xml.
+    async function decompress(file) {
+        try {
+            const bytes = await file.arrayBuffer();
+            const zip = await JSZip.loadAsync(bytes);
 
-        reader.onload = async (event) => {
-            try {
-                const bytes = event.target.result;
-                const zip = await JSZip.loadAsync(bytes);
+            const score = Object.values(zip.files).find(
+                file =>
+                    !file.dir &&
+                    file.name.split("/").pop() === "score.xml"
+            );
 
-                const score = Object.values(zip.files).find(f => f.name === 'score.xml');
-                if (!score) {
-                    console.error(`Archive contains no score.xml:`, zip.files);
-                    return reject('👾 On no! Unexpected alien format. 👾');
-                }
+            if (!score) {
+                throw new Error(
+                    "The archive does not contain score.xml."
+                );
+            }
 
-                const decompressed = await score.async("string");
-                return resolve(decompressed);
-            } catch(e) {
-                console.error('Decompression failed:', e);
-                return reject(`⚡️ Unable to process the music sheet (${e.message}) ⚡️`);
+            const xml = await score.async("string");
+
+            return {
+                zip,
+                scoreXml: xml,
+                scorePath: score.name
             };
-        };
+        } catch (err) {
+            throw new Error(
+                `⚡️ Unable to process the music sheet: ${err.message}`
+            );
+        }
+    }
 
-        reader.onerror = (event) => {
-            console.error("Failed to read buffer:", event.error);
-            return reject('❌ Error reading the selected file. ❌');
-        };
-    });
-}
+    // Extract instrument and volume information for the GUI.
+    function processXml(xml) {
+        const score = new DOMParser().parseFromString(
+            xml,
+            "application/xml"
+        );
 
-const processXml = (xml) => {
-     const score = new DOMParser().parseFromString(xml, "application/xml")
-     const staffLayout = score.querySelectorAll('staffLayout');
+        if (score.querySelector("parsererror")) {
+            throw new Error("Invalid score.xml.");
+        }
 
-     const voices = {};
-     for(const s of staffLayout) {
-        const instrument = s.querySelector('instrument');
-        const name = instrument.getAttribute('name') || instrument.getAttribute('abbrev')
+        const staffLayout =
+            score.querySelectorAll("staffLayout");
 
-        const sound = s.querySelector('sound');
-        const instr = sound.getAttribute('instr');
-        const vol = sound.getAttribute('volume');
+        const voices = {};
 
-        sound.removeAttribute('sample');
-        sound.removeAttribute('genericSound');
-        sound.removeAttribute('DataID');
+        for (const staff of staffLayout) {
+            const instrument =
+                staff.querySelector("instrument");
 
-        voices[name] = {instrument: instr, volume: vol};
-     }
+            const sound = staff.querySelector("sound");
 
-     const sliders = document.querySelector("choir-sliders");
-     sliders.voices = voices;
-}
+            if (!instrument || !sound) continue;
 
-const modifyXML = (xml, voice, newInstrument, newVolume) => {
-     const score = new DOMParser().parseFromString(xml, "application/xml")
-     const staffLayout = score.querySelectorAll('staffLayout');
+            const name =
+                instrument.getAttribute("name") ||
+                instrument.getAttribute("abbrev");
 
-     const voices = {};
-     for(const s of staffLayout) {
-        const instrument = s.querySelector('instrument');
-        // TODO: check if the right voice, otherwise else continue to next loop
+            if (!name) continue;
 
-        const sound = s.querySelector('sound');
-        const instr = sound.setAttribute('instr', newInstrument);
-        const vol = sound.setAttribute('volume', newVolume);
+            voices[name] = {
+                instrument: sound.getAttribute("instr"),
+                volume: sound.getAttribute("volume")
+            };
+        }
 
-        sound.removeAttribute('sample');
-        sound.removeAttribute('genericSound');
-        sound.removeAttribute('DataID');
-     }
+        sliders.voices = voices;
+    }
 
-     return staffLayout;
-}
+    // Modify only the selected voice and return the full XML string.
+    function modifyXML(xml, voice, newInstrument, newVolume) {
+        const score = new DOMParser().parseFromString(
+            xml,
+            "application/xml"
+        );
+
+        if (score.querySelector("parsererror")) {
+            throw new Error("Invalid score.xml.");
+        }
+
+        const staffLayout =
+            score.querySelectorAll("staffLayout");
+
+        let found = false;
+
+        for (const staff of staffLayout) {
+            const instrument =
+                staff.querySelector("instrument");
+
+            if (!instrument) continue;
+
+            const name =
+                instrument.getAttribute("name") ||
+                instrument.getAttribute("abbrev");
+
+            if (name !== voice) continue;
+
+            const sound = staff.querySelector("sound");
+
+            if (!sound) continue;
+
+            sound.setAttribute(
+                "instr",
+                String(newInstrument)
+            );
+
+            sound.setAttribute(
+                "volume",
+                String(newVolume)
+            );
+
+            sound.removeAttribute("sample");
+            sound.removeAttribute("genericSound");
+            sound.removeAttribute("DataID");
+
+            found = true;
+        }
+
+        if (!found) {
+            throw new Error(
+                `Could not find a matching voice: ${voice}`
+            );
+        }
+
+        return new XMLSerializer().serializeToString(score);
+    }
+
+    // Replace score.xml and download the new archive.
+    async function downloadCapx() {
+        originalZip.file(scorePath, scoreXml);
+
+        const blob = await originalZip.generateAsync({
+            type: "blob",
+            mimeType: "application/zip"
+        });
+
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+
+        link.href = url;
+        link.download = originalFileName;
+
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+
+        // Release the temporary URL after the browser starts downloading.
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+});
