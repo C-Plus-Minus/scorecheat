@@ -6,10 +6,14 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
     const fileInput = document.getElementById('fileInput');
     const messageArea = document.getElementById('message-area');
+
+    let scoreXml;
+
     fileInput.addEventListener(events.READ, async (event) => {
         decompress(event.detail.file)
             .then(content => {
-                messageArea.textContent = `✅ Successfully read! ✅`;
+                scoreXml = content;
+                messageArea.textContent = `✅ Successfully read! ✅`;                
                 processXml(content);
             })
             .catch(err => messageArea.textContent = `${err}`);
@@ -26,7 +30,14 @@ document.addEventListener('DOMContentLoaded', (event) => {
     const sliders = document.querySelector("choir-sliders");
     sliders.addEventListener("volume-change", (event) => {
         const { voice, instrument, volume } = event.detail;
-        console.log(voice.toUpperCase(), instrument, volume);
+        const modifiedXml = modifyXML(scoreXml, voice, instrument, volume)
+
+        // TODO: 
+        //  1. Read MD5 hash of original file
+        //  2. Create copy of original file: `<original file name>_<ISO8601 timestamp>.capx`
+        //  3. Compare original MD5 to copy MD5
+        //  4. If error, retry steps 1. through 3.
+        //  5. Otherwise, overwrite original score.xml (NOT the copy!) with our modified score.xml
     });
         
 });
@@ -112,4 +123,25 @@ const processXml = (xml) => {
 
      const sliders = document.querySelector("choir-sliders");
      sliders.voices = voices;
+}
+
+const modifyXML = (xml, voice, newInstrument, newVolume) => {
+     const score = new DOMParser().parseFromString(xml, "application/xml")
+     const staffLayout = score.querySelectorAll('staffLayout');
+
+     const voices = {};
+     for(const s of staffLayout) {
+        const instrument = s.querySelector('instrument');
+        // TODO: check if the right voice, otherwise else continue to next loop
+
+        const sound = s.querySelector('sound');
+        const instr = sound.setAttribute('instr', newInstrument);
+        const vol = sound.setAttribute('volume', newVolume);
+
+        sound.removeAttribute('sample');
+        sound.removeAttribute('genericSound');
+        sound.removeAttribute('DataID');
+     }
+
+     return staffLayout;
 }
