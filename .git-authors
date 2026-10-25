@@ -1,6 +1,8 @@
 pairs:
   cpm: C+-
   gem: Gemma4
+  gpt: GPT-6
 email_addresses:
   cpm: c-plus-minus@noreply.github.com
   gem: gemma4-32.latest@ocp.corp
+  gpt: chat-gpt.free-pl@n-sky.net
