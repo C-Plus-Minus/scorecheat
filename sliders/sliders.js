@@ -1,4 +1,4 @@
-import { MIDI } from './instrument-list.js';
+import '../instruments/midi-picker.js';
 
 class ChoirSliders extends HTMLElement {
   _voices = {};
@@ -37,15 +37,8 @@ class ChoirSliders extends HTMLElement {
               <div class="voice-top">
                 <span class="voice-name">
                   <span class="dot"></span>
-                  ${voice}
-                  <select>
-                    ${Object.entries(MIDI.Instruments).map(([instrument, properties]) => {
-                      return instrument === assigned.instrument 
-                        ? `<option value="${instrument}" selected>${properties.name}</option>`
-                        : `<option value="${instrument}">${properties.name}</option>`
-                    })}
-                  </select>
-                  <span class="instrument">#${assigned.instrument}</span>
+                  <span class="voice-type">${voice}</span>
+                  <midi-picker></midi-picker>
                 </span>
                 <span class="volume">${assigned.volume}%</span>
               </div>
@@ -64,25 +57,25 @@ class ChoirSliders extends HTMLElement {
     `;
 
     this.querySelectorAll(".voice").forEach(row => {
-      const voice = row.dataset.voice;
       const slider = row.querySelector("input");
-      const dropdown = row.querySelector("select");
       const display = row.querySelector(".volume");
+      const picker = row.querySelector("midi-picker");
 
+      const voice = row.dataset.voice;
+      
       const update = () => {
         const absoluteVolume = Number(slider.value);
         const relativeVolume = Math.ceil(absoluteVolume / 127 * 100);
 
         display.textContent = `${relativeVolume}%`;
         slider.style.setProperty("--fill", `${relativeVolume}%`);
-
         this._voices[voice].volume = absoluteVolume;
 
         this.dispatchEvent(new CustomEvent("volume-change", {
           detail: {
             voice: voice,
-            instrument: dropdown.value,
-            volume: this._voices[voice].volume
+            instrument: picker.value,
+            volume: this._voices[voice].volume 
           },
           bubbles: true
         }));
@@ -90,7 +83,7 @@ class ChoirSliders extends HTMLElement {
 
       // TODO: redesign -> mixed responsibilities
       slider.addEventListener("input", update);
-      dropdown.addEventListener("change", update);
+      picker.addEventListener("change", update);
       update();
     });
   }

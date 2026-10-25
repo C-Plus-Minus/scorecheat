@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
     const sliders = document.querySelector("choir-sliders");
     sliders.addEventListener("volume-change", (event) => {
         const { voice, instrument, volume } = event.detail;
-        console.log(voice.toUpperCase(), instrument.toUpperCase(), volume);
+        console.log(voice.toUpperCase(), instrument, volume);
     });
         
 });

@@ -128,3 +128,8 @@ choir-sliders {
   background: #a78bfa;
 }
 
+.voice-type {
+  min-width: 3.125rem;
+  max-width: 3.125rem;
+}
+
