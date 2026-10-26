@@ -1,7 +1,7 @@
 {
-    "name": "PWA Minimal Test",
-    "version": "1.0",
-    "description": "Minimal PWA shell for testing service worker functionality.",
+    "name": "ScoreCheat",
+    "version": "0.9",
+    "description": "A simple, elegant tool for editing choir score instruments and volume.",
     "start_url": "/",
     "display": "standalone",
     "background_color": "#ffffff",

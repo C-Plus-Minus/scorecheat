@@ -1,10 +1,10 @@
 import "./sliders/sliders.js";
 
 document.addEventListener("DOMContentLoaded", () => {
-    const button = document.getElementById("simpleButton");
-    const fileInput = document.getElementById("fileInput");
+    const button = document.getElementById("simple-button");
+    const fileInput = document.getElementById("file-input");
     const messageArea = document.getElementById("message-area");
-    const downloadButton = document.getElementById("downloadButton");
+    const downloadButton = document.getElementById("download-button");
     const sliders = document.querySelector("choir-sliders");
 
     let originalZip = null;
@@ -30,17 +30,16 @@ document.addEventListener("DOMContentLoaded", () => {
             scoreXml = result.scoreXml;
             scorePath = result.scorePath;
 
-            originalFileName = event.detail.file.name.replace(
-                /\.(capx|zip)$/i,
-                ""
-            ) + "-modified.capx";
+            originalFileName = event.detail.file.name.replace(/\.(capx|zip)$/i, "") + "-modified.capx";
 
             processXml(scoreXml);
 
-            messageArea.textContent = "✅ Successfully read!";
+            //messageArea.textContent = "✅ Successfully read!";
+            enableControls();
         } catch (err) {
-            messageArea.textContent = err.message;
             console.error(err);
+            messageArea.textContent = err.message;
+            disableControls();
         }
     });
 
@@ -49,8 +48,8 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     fileInput.addEventListener(events.INVALID_FILE, () => {
-        messageArea.textContent =
-            "⛔️ Please select a valid .capx or .zip file.";
+        messageArea.textContent = "⛔️ Please select a valid .capx or .zip file.";
+        disableControls();
     });
 
     // Apply GUI changes to the current XML.
@@ -74,28 +73,22 @@ document.addEventListener("DOMContentLoaded", () => {
         } catch (err) {
             console.error("XML modification failed:", err);
             messageArea.textContent = `❌ ${err.message}`;
+            disableControls();
         }
     });
 
     // Download the modified archive.
     downloadButton.addEventListener("click", async () => {
-        if (!originalZip || !scoreXml || !scorePath) {
-            messageArea.textContent =
-                "❌ Please load a .capx file first.";
-            return;
-        }
-
         downloadButton.disabled = true;
 
         try {
             await downloadCapx();
-
-            messageArea.textContent =
-                "✅ Modified .capx downloaded!";
+            messageArea.textContent = "✅ Modified .capx downloaded!";
+            document.getElementById("status-bar").style.display = 'none';
         } catch (err) {
             console.error("Download failed:", err);
-            messageArea.textContent =
-                `❌ Download failed: ${err.message}`;
+            messageArea.textContent = `❌ Download failed: ${err.message}`;
+            disableControls();
         } finally {
             downloadButton.disabled = false;
         }
@@ -153,9 +146,8 @@ document.addEventListener("DOMContentLoaded", () => {
             );
 
             if (!score) {
-                throw new Error(
-                    "The archive does not contain score.xml."
-                );
+                console.error("The archive does not contain score.xml.");
+                throw new Error("Not a valid Capella format.");
             }
 
             const xml = await score.async("string");
@@ -166,9 +158,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 scorePath: score.name
             };
         } catch (err) {
-            throw new Error(
-                `⚡️ Unable to process the music sheet: ${err.message}`
-            );
+            throw new Error(`❌ Unable to process the score: ${err.message}`);
         }
     }
 
@@ -292,3 +282,20 @@ document.addEventListener("DOMContentLoaded", () => {
         setTimeout(() => URL.revokeObjectURL(url), 1000);
     }
 });
+
+function enableControls() {
+    document.getElementById("sliders").classList.toggle("inactive", false);
+    document.getElementById("download").classList.toggle("inactive", false);
+    document.getElementById("status-bar").style.display = 'none';
+    document.getElementById("download-button").disabled = false;
+}
+
+function disableControls() {
+    document.querySelector("choir-sliders").voices = {};
+    document.getElementById("sliders").classList.toggle("inactive", true);
+    document.getElementById("download").classList.toggle("inactive", true);
+    document.getElementById("status-bar").style.display = 'block';
+    document.getElementById("download-button").disabled = true;
+}
+
+

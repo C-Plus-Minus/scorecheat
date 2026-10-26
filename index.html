@@ -1,36 +1,601 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=0.9">
+
+    <meta name="theme-color" content="#100e17">
+    <meta name="description" content="A simple, elegant tool for editing choir score instruments and volume.">
 
     <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="sliders/sliders.css">
-    <style>
-        body { font-family: sans-serif; padding: 20px; }
-        #message-area { margin-top: 20px; padding: 10px; border: 1px solid #ccc; }
-    </style>
 
-    <title>🎼ScoreCheat🛠️</title>
+    <title>ScoreCheat — Score Studio</title>
+
+    <style>
+        :root {
+            color-scheme: dark;
+            --bg: #100e17;
+            --panel: #17151f;
+            --panel-soft: #1c1928;
+            --border: #302b40;
+            --text: #f1eff8;
+            --muted: #898398;
+            --purple: #a78bfa;
+            --purple-light: #c4b5fd;
+            --radius: 24px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+            font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont,
+                "Segoe UI", sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(
+                    ellipse at 50% -10%,
+                    #30234d 0%,
+                    transparent 48%
+                ),
+                var(--bg);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        button,
+        input {
+            font: inherit;
+        }
+
+        button {
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .app {
+            width: min(100% - 32px, 560px);
+            margin-inline: auto;
+            /* padding: 28px 0 40px; */
+        }
+
+        /* Header */
+
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 16px !important;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 0;
+        }
+
+        .brand-icon {
+            display: grid;
+            place-items: center;
+            flex: 0 0 46px;
+            width: 46px;
+            height: 46px;
+            border: 1px solid #493866;
+            border-radius: 16px;
+            background: linear-gradient(145deg, #302344, #20192f);
+            box-shadow: 0 5px 24px #a78bfa12;
+            font-size: 23px;
+        }
+
+        .brand h1 {
+            margin: 0;
+            font-size: 19px;
+            font-weight: 750;
+            letter-spacing: -0.6px;
+        }
+
+        .brand p {
+            margin: 4px 0 0;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .version {
+            padding: 7px 10px;
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            color: #c4b5fd;
+            background: #1b1726;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            white-space: nowrap;
+        }
+
+        /* Intro */
+
+        .intro {
+            margin-bottom: 24px;
+        }
+
+        .eyebrow {
+            margin: 0 0 10px;
+            color: var(--purple);
+            font-size: 11px;
+            font-weight: 750;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .intro h2 {
+            max-width: 440px;
+            margin: 0;
+            font-size: clamp(29px, 7vw, 40px);
+            font-weight: 750;
+            line-height: 1.12;
+            letter-spacing: -1.5px;
+        }
+
+        .intro h2 span {
+            color: var(--purple-light);
+        }
+
+        .intro > p:last-child {
+            max-width: 390px;
+            margin: 13px 0 0;
+            color: var(--muted);
+            font-size: 14px;
+            line-height: 1.7;
+        }
+
+        /* Shared panels */
+
+        .panel {
+            overflow: hidden;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            background: rgb(23 21 31 / 94%);
+            box-shadow: 0 18px 55px #00000015;
+        }
+
+        /* Upload panel */
+
+        .upload-panel {
+            margin-bottom: 18px;
+            padding: 20px;
+        }
+
+        .section-heading {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 17px;
+        }
+
+        .step {
+            display: grid;
+            place-items: center;
+            flex: 0 0 34px;
+            width: 34px;
+            height: 34px;
+            border: 1px solid #493866;
+            border-radius: 12px;
+            color: var(--purple-light);
+            background: #292039;
+            font-size: 13px;
+            font-weight: 750;
+        }
+
+        .section-heading h3 {
+            margin: 0;
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .section-heading p {
+            margin: 4px 0 0;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .file-picker {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 13px;
+            min-height: 88px;
+            padding: 16px;
+            border: 1px dashed #514366;
+            border-radius: 17px;
+            background: #1c1828;
+            transition: border-color 160ms ease, background 160ms ease;
+        }
+
+        .file-picker:focus-within {
+            border-color: var(--purple);
+            background: #211b30;
+        }
+
+        .file-icon {
+            display: grid;
+            place-items: center;
+            flex: 0 0 44px;
+            width: 44px;
+            height: 44px;
+            border: 1px solid #413052;
+            border-radius: 14px;
+            background: #2a2139;
+            font-size: 21px;
+        }
+
+        .file-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .file-info strong {
+            display: block;
+            overflow-wrap: anywhere;
+            font-size: 13px;
+            font-weight: 650;
+        }
+
+        .file-info span {
+            display: block;
+            margin-top: 5px;
+            color: var(--muted);
+            font-size: 11px;
+        }
+
+        .pick-button {
+            flex-shrink: 0;
+            padding: 10px 12px;
+            border: 1px solid #544170;
+            border-radius: 12px;
+            color: #e4d9ff;
+            background: #302541;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 160ms ease, transform 160ms ease;
+        }
+
+        .pick-button:hover {
+            background: #403052;
+        }
+
+        .pick-button:active,
+        .primary-button:active {
+            transform: scale(0.98);
+        }
+
+        #file-input {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
+            clip-path: inset(50%);
+            white-space: nowrap;
+        }
+
+        .format-note {
+            margin: 12px 2px 0;
+            color: #777186;
+            font-size: 11px;
+            line-height: 1.6;
+        }
+
+        /* Mixer panel */
+
+        .inactive {
+            opacity: 0.33;
+        }
+
+        .mixer-panel {
+            margin-bottom: 18px;
+            padding: 20px;
+        }
+
+        .mixer-panel choir-sliders {
+            display: block;
+            width: 100%;
+            max-width: none;
+        }
+
+        /* Status */
+
+        .status {
+            display: flex;
+            align-items: flex-start;
+            gap: 11px;
+            margin-bottom: 18px;
+            padding: 15px 16px;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            background: #17151f;
+        }
+
+        .status-indicator {
+            flex: 0 0 8px;
+            width: 8px;
+            height: 8px;
+            margin-top: 5px;
+            border-radius: 50%;
+            background: #8bd8c0;
+            box-shadow: 0 0 12px #8bd8c040;
+        }
+
+        .status p {
+            margin: 0;
+            color: #b8b2c7;
+            font-size: 12px;
+            line-height: 1.6;
+            overflow-wrap: anywhere;
+        }
+
+        /* Download */
+
+        .download-panel {
+            padding: 20px;
+            border-color: #44345c;
+            background:
+                radial-gradient(ellipse at 100% 0%, #3b285722, transparent 55%),
+                #191622;
+        }
+
+        .download-copy {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 17px;
+        }
+
+        .download-icon {
+            display: grid;
+            place-items: center;
+            flex: 0 0 40px;
+            width: 40px;
+            height: 40px;
+            border: 1px solid #4c3966;
+            border-radius: 14px;
+            background: #2b203a;
+            font-size: 19px;
+        }
+
+        .download-copy h3 {
+            margin: 1px 0 5px;
+            font-size: 14px;
+        }
+
+        .download-copy p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        .primary-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            min-height: 51px;
+            padding: 14px 18px;
+            border: 1px solid #c4b5fd;
+            border-radius: 15px;
+            color: #20172e;
+            background: linear-gradient(135deg, #c4b5fd, #a78bfa);
+            box-shadow: 0 6px 22px #a78bfa20;
+            font-size: 14px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: filter 160ms ease, transform 160ms ease;
+        }
+
+        .primary-button:hover:not(:disabled) {
+            filter: brightness(1.08);
+        }
+
+        .primary-button:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .download-note {
+            margin: 12px 0 0;
+            color: #777186;
+            font-size: 10px;
+            line-height: 1.6;
+            text-align: center;
+        }
+
+        /* Footer */
+
+        footer {
+            padding: 24px 0 0;
+            color: #716b80;
+            font-size: 11px;
+            text-align: center;
+        }
+
+        footer span {
+            color: #b7a0f6;
+        }
+
+        /* Accessibility */
+
+        button:focus-visible {
+            outline: 2px solid var(--purple-light);
+            outline-offset: 4px;
+        }
+
+        @media (min-width: 700px) {
+            .app {
+                padding-top: 42px;
+                padding-bottom: 52px;
+            }
+
+            .topbar {
+                margin-bottom: 42px;
+            }
+
+            .intro {
+                margin-bottom: 30px;
+            }
+
+            .upload-panel,
+            .mixer-panel,
+            .download-panel {
+                padding: 24px;
+            }
+        }
+
+        @media (max-width: 380px) {
+            .app {
+                width: calc(100% - 22px);
+                padding-top: 18px;
+            }
+
+            .brand {
+                gap: 9px;
+            }
+
+            .brand-icon {
+                flex-basis: 40px;
+                width: 40px;
+                height: 40px;
+                border-radius: 13px;
+            }
+
+            .brand h1 {
+                font-size: 17px;
+            }
+
+            .version {
+                padding: 6px 8px;
+                font-size: 9px;
+            }
+
+            .upload-panel,
+            .mixer-panel,
+            .download-panel {
+                padding: 15px;
+                border-radius: 20px;
+            }
+
+            .file-picker {
+                flex-wrap: wrap;
+            }
+
+            .pick-button {
+                margin-left: auto;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                scroll-behavior: auto !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
 </head>
 
 <body class="pwa-minimal">
-    <header>
-        <h1 id="app-title">🎼ScoreCheat🛠️</h1>
-    </header>
+    <div class="app">
 
-    <main>  
-        <button id="simpleButton">Click to Test PWA Script</button>
-        <input type="file" id="fileInput" accept=".zip, .capx" style="display: none;">
-        <p id="message-area">Script status: Waiting for button click...</p>
+        <header class="topbar">
+            <div class="brand">
+                <div class="brand-icon" aria-hidden="true">🎼</div>
+                <div>
+                    <h1>ScoreCheat</h1>
+                    <p>Fine-tune your Capella sheets</p>
+                </div>
+            </div>
+            <span class="version">Vers. 0.9</span>
+        </header>
 
-        <choir-sliders></choir-sliders>
-        <button id="downloadButton">Download</button>
-    </main>
+        <div class="status" role="status" aria-live="polite" style="display: none;" id="status-bar">
+            <span class="status-indicator" aria-hidden="true"></span>
+            <p id="message-area">Load a score to get started.</p>
+        </div>
+
+        <main>
+            <section class="panel upload-panel" aria-labelledby="upload-title">
+                <div class="file-picker">
+                    <div class="file-icon" aria-hidden="true">📂</div>
+
+                    <div class="file-info">
+                        <strong id="file-name">No score selected</strong>
+                        <span id="file-description">CAPX or ZIP archive</span>
+                    </div>
+
+                    <button
+                        class="pick-button"
+                        id="simple-button"
+                        type="button"
+                    >
+                        Browse
+                    </button>
+
+                    <input
+                        type="file"
+                        id="file-input"
+                        accept=".capx,.zip"
+                        aria-label="Choose a CAPX or ZIP score file"
+                    >
+                </div>
+            </section>
+
+            <section class="panel mixer-panel inactive" aria-label="Score mixer" id="sliders">
+                <choir-sliders></choir-sliders>
+            </section>
+
+            <section class="panel download-panel inactive" aria-labelledby="download-title" id="download">
+                <div class="download-copy">
+                    <div class="download-icon" aria-hidden="true">💾</div>
+                    <div>
+                        <h3 id="download-title">Ready to export?</h3>
+                        <p>Your original file stays untouched.</p>
+                    </div>
+                </div>
+
+                <button
+                    class="primary-button"
+                    id="download-button"
+                    type="button"
+                    disabled
+                >
+                    <span aria-hidden="true">↓</span>
+                    Download modified score
+                </button>
+            </section>
+        </main>
+    </div>
 
     <script src="https://unpkg.com/jszip@3.7.1/dist/jszip.js"></script>
-    <script src="script.js" type="module"></script>
-</body class="pwa-minimal">
+    <script type="module" src="script.js"></script>
 
+    <script>
+        // Keep the filename display in sync with the file picker.
+        document.getElementById("file-input").addEventListener("change", (event) => {
+            const file = event.target.files?.[0];
+
+            if (!file) return;
+
+            document.getElementById("file-name").textContent = file.name;
+            document.getElementById("file-description").textContent =
+                `${(file.size / 1024).toFixed(1)} KB · Selected`;
+        });
+    </script>
+</body>
 </html>
