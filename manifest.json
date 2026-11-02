@@ -2,7 +2,7 @@
     "name": "ScoreCheat",
     "version": "0.9",
     "description": "A simple, elegant tool for editing choir score instruments and volume.",
-    "start_url": "/",
+    "start_url": "/scorecheat/",
     "display": "standalone",
     "background_color": "#ffffff",
     "manifest_version": 1,
