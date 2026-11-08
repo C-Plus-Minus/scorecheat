@@ -188,7 +188,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const name =
                 instrument.getAttribute("name") ||
-                instrument.getAttribute("abbrev");
+                instrument.getAttribute("abbrev") ||
+                staff.getAttribute("description");
 
             if (!name) continue;
 
@@ -225,7 +226,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const name =
                 instrument.getAttribute("name") ||
-                instrument.getAttribute("abbrev");
+                instrument.getAttribute("abbrev") ||
+                staff.getAttribute("description");
 
             if (name !== voice) continue;
 
